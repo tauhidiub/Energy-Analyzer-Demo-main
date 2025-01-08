@@ -98,7 +98,6 @@
         font-weight: 600;
     }
 </style>
-
 <div class="container mt-5">
     <div class="alert alert-danger" id="errorAlert" style="display: none;">
         <h5 class="alert-heading">Error</h5>
@@ -172,6 +171,7 @@
             <button type="submit" class="btn btn-primary">Analyze Data</button>
         </div>
     </form>
+   
 </br>
     <!-- Results Section -->
     <div id="resultsSection" style="display: none;">
@@ -437,8 +437,10 @@
                                     <option value="">Solar Chart</option>
                                     <option value="">Asset Chart</option>
                                 </select>
+                                <script>
+                                </script>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-4" style="display: none;">
                                 <label for="timeFilter" class="form-label">Time Filter:</label>
                                 <select class="form-control" id="timeFilter" onchange="updateTimeFilter()">
                                     <option value="all">All Data</option>
@@ -1327,6 +1329,10 @@
                 const week = document.getElementById('weekSelect').value;
                 const timeGranularity = document.getElementById('timeGranularity').value;
                 const chartType = document.getElementById('ChartType').value;
+                //tauhid below line
+                const chartType_p = document.getElementById('ChartType_p').value;
+                //tauhid below line
+                const chartType_c = document.getElementById('ChartType_c').value;
                 
                 filteredData = filterDataByTime(chartData.chart_data, filterType);
 
@@ -1408,6 +1414,10 @@
                 
                 // Create and update chart
                 const config = createChartConfig('line', filteredData.labels, datasets, indices, chartType);
+              //tauhid below line
+                const config_p = createChartConfig_p('line', filteredData.labels, datasets, indices, chartType_p);
+              //tauhid below line
+                const config_c = createChartConfig_c('line', filteredData.labels, datasets, indices, chartType_c);
                 
                 if (energyChart) {
                     energyChart.destroy();
@@ -1419,13 +1429,15 @@
                     energyChart_p.destroy();
                 }
                 const ctx_p = document.getElementById('energyChart_p').getContext('2d');
-                energyChart_p = new Chart(ctx_p, config);
+                //tauhid below line
+                energyChart_p = new Chart(ctx_p, config_p);
 
                 if (energyChart_c) {
                     energyChart_c.destroy();
                 }
                 const ctx_c = document.getElementById('energyChart_c').getContext('2d');
-                energyChart_c = new Chart(ctx_c, config);
+                //tauhid below line
+                energyChart_c = new Chart(ctx_c, config_c);
                 // Update summary statistics
                 updateSummaryStatistics(filteredData);
             }
@@ -1608,13 +1620,14 @@
                 'weekSelect': document.getElementById('weekSelect'),
                 //'timeGranularity': document.getElementById('timeGranularity')
             };
-            
+
+            //tauhid disable below block
             // Reset all filters except the current one
-            Object.entries(filters).forEach(([id, element]) => {
-                if (element.id !== currentFilter) {
-                    element.value = 'all';
-                }
-            });
+            // Object.entries(filters).forEach(([id, element]) => {
+            //     if (element.id !== currentFilter) {
+            //         element.value = 'all';
+            //     }
+            // });
         }
 
         function resetAllFilters(currentFilter) {
@@ -1627,9 +1640,10 @@
             };
             
             // Reset all filters except the current one
-            Object.entries(filters).forEach(([id, element]) => {
-                    element.value = 'all';
-            });
+            //tauhid disable below block
+            // Object.entries(filters).forEach(([id, element]) => {
+            //         element.value = 'all';
+            // });
 
             document.getElementById('peak-price').value = ''
             document.getElementById('off-peak-price').value = ''
@@ -1667,8 +1681,13 @@
         });
 
         document.getElementById('ChartType').addEventListener('change', function() {
+
             updateChartType();
         });
+      //tauhid below line 
+      document.getElementById('ChartType_p').addEventListener('change', updateChartType);
+      //tauhid below line
+      document.getElementById('ChartType_c').addEventListener('change', updateChartType);
         
         document.getElementById('peak-price').addEventListener('input', function(event) {            
             setProfitValueToProfitCalculatorSection(event.target.value, 'peak')
@@ -1730,9 +1749,426 @@
 
 
 
+///tauhid pricing chart config function
 
-        function createChartConfig(chartType, labels, datasets, indices, chartClassification='all') {                        
-            // Calculate the positions for all annotations
+function createChartConfig_p(chartType, labels, datasets, indices, chartClassification='pricingChart') {                        
+            // Calculate the positions for all annotations 
+            const points = {
+                highPeak: {
+                    x: labels[indices.highestPeakIndex],
+                    y: datasets[0].data[indices.highestPeakIndex],
+                    color: 'rgba(255, 99, 132, 0.8)'
+                },
+                lowPeak: {
+                    x: labels[indices.lowestPeakIndex],
+                    y: datasets[0].data[indices.lowestPeakIndex],
+                    color: 'rgba(255, 99, 132, 0.8)'
+                },
+                highOffPeak: {
+                    x: labels[indices.highestOffPeakIndex],
+                    y: datasets[1].data[indices.highestOffPeakIndex],
+                    color: 'rgba(54, 162, 235, 0.8)'
+                },
+                lowOffPeak: {
+                    x: labels[indices.lowestOffPeakIndex],
+                    y: datasets[1].data[indices.lowestOffPeakIndex],
+                    color: 'rgba(54, 162, 235, 0.8)'
+                }
+            };            
+        
+            // Define all annotations including the ceiling
+            let annotations = {
+                highestPeakAnnotation: {
+                    type: 'point',
+                    xValue: points.highPeak.x,
+                    yValue: points.highPeak.y,
+                    backgroundColor: points.highPeak.color,
+                    radius: 10,
+                    borderWidth: 2,
+                    borderColor: 'white',
+                    label: {
+                        display: true,
+                        content: 'Highest Peak',
+                        position: 'top'
+                    }
+                },
+                lowestPeakAnnotation: {
+                    type: 'point',
+                    xValue: points.lowPeak.x,
+                    yValue: points.lowPeak.y,
+                    backgroundColor: points.lowPeak.color,
+                    radius: 10,
+                    borderWidth: 2,
+                    borderColor: 'white',
+                    label: {
+                        display: true,
+                        content: 'Lowest Peak',
+                        position: 'bottom'
+                    }
+                },
+                highestOffPeakAnnotation: {
+                    type: 'point',
+                    xValue: points.highOffPeak.x,
+                    yValue: points.highOffPeak.y,
+                    backgroundColor: points.highOffPeak.color,
+                    radius: 10,
+                    borderWidth: 2,
+                    borderColor: 'white',
+                    label: {
+                        display: true,
+                        content: 'Highest Off-Peak',
+                        position: 'top'
+                    }
+                },
+                lowestOffPeakAnnotation: {
+                    type: 'point',
+                    xValue: points.lowOffPeak.x,
+                    yValue: points.lowOffPeak.y,
+                    backgroundColor: points.lowOffPeak.color,
+                    radius: 10,
+                    borderWidth: 2,
+                    borderColor: 'white',
+                    label: {
+                        display: true,
+                        content: 'Lowest Off-Peak',
+                        position: 'bottom'
+                    }
+                },
+                ceiling: {
+                    type: 'line',
+                    yMin: calculateAdjustedCeiling(),
+                    yMax: calculateAdjustedCeiling(),
+                    borderColor: 'rgba(255, 0, 0, 0.8)',
+                    borderWidth: 3,
+                    borderDash: [10, 5],
+                    yScaleID: 'consumption', // Changed from scaleID to yScaleID
+                    label: {
+                        display: true,
+                        content: `Ceiling: ${formatEUNumber(calculateAdjustedCeiling())} kW`,
+                        position: 'start',
+                        backgroundColor: 'rgba(255, 0, 0, 0.8)',
+                        color: 'white',
+                        padding: 6
+                    }
+                }
+            };           
+
+            if (chartClassification==='usageChart') {
+                 datasets = datasets.filter(
+                     (item) => item.label==='Peak Hours Consumption (kW)'
+                     || item.label === 'Off-Peak Hours Consumption (kW)'
+                     ||  item.label === 'Total Consumption (kW)'
+                 )
+            } else if (chartClassification==='pricingChart') {
+                datasets = datasets.filter(
+                    (item) => item.label==='Peak Hours Cost (€)'
+                    || item.label === 'Off-Peak Hours Cost (€)'
+                )
+                annotations = {}
+            } else if(chartClassification==='ceiling') {
+                // datasets = datasets.filter((item) => item.label==='Total Consumption (kW)')
+                datasets = []
+                annotations = { ceiling: annotations.ceiling};
+            }
+            
+            return {
+                type: chartType === 'mixed' ? 'bar' : chartType,
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        consumption: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Energy Consumption (kW)'
+                            }
+                        },
+                        cost: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Cost (€)'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        }
+                    },
+                    plugins: {
+                        annotation: {
+                            annotations: annotations  // Use the annotations object defined above
+                        },
+                        title: {
+                            display: true,
+                            text: 'Daily Energy Consumption and Costs'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += formatEUNumber(context.parsed.y);
+                                    return label;
+                                },
+                                afterLabel: function(context) {
+                                    const priceHigh = parseFloat(document.getElementById('price_high').value);
+                                    const priceLow = parseFloat(document.getElementById('price_low').value);
+                                    
+                                    if (context.raw === points.highPeak.y && context.label === points.highPeak.x) {
+                                        return `- Peak Hours(Highest Daily)\n  Usage: ${formatEUNumber(points.highPeak.y)} kW / Cost: €${formatEUNumber(points.highPeak.y * priceHigh)}`;
+                                    }
+                                    if (context.raw === points.lowPeak.y && context.label === points.lowPeak.x) {
+                                        return `- Peak Hours(Highest Daily)\n  Usage: ${formatEUNumber(points.lowPeak.y)} kW / Cost: €${formatEUNumber(points.lowPeak.y * priceHigh)}`;
+                                    }
+                                    if (context.raw === points.highOffPeak.y && context.label === points.highOffPeak.x) {
+                                        return `- Off Peak(Highest Daily)\n  Usage: ${formatEUNumber(points.highOffPeak.y)} kW / Cost: €${formatEUNumber(points.highOffPeak.y * priceLow)}`;
+                                    }
+                                    if (context.raw === points.lowOffPeak.y && context.label === points.lowOffPeak.x) {
+                                        return `- Off Peak(Highest Daily)\n  Usage: ${formatEUNumber(points.lowOffPeak.y)} kW / Cost: €${formatEUNumber(points.lowOffPeak.y * priceLow)}`;
+                                    }
+                                    return '';
+                                }
+                                
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
+       
+        //tauhid ceiling chart config function
+
+function createChartConfig_c(chartType, labels, datasets, indices, chartClassification='ceiling') {                        
+            // Calculate the positions for all annotations 
+            const points = {
+                highPeak: {
+                    x: labels[indices.highestPeakIndex],
+                    y: datasets[0].data[indices.highestPeakIndex],
+                    color: 'rgba(255, 99, 132, 0.8)'
+                },
+                lowPeak: {
+                    x: labels[indices.lowestPeakIndex],
+                    y: datasets[0].data[indices.lowestPeakIndex],
+                    color: 'rgba(255, 99, 132, 0.8)'
+                },
+                highOffPeak: {
+                    x: labels[indices.highestOffPeakIndex],
+                    y: datasets[1].data[indices.highestOffPeakIndex],
+                    color: 'rgba(54, 162, 235, 0.8)'
+                },
+                lowOffPeak: {
+                    x: labels[indices.lowestOffPeakIndex],
+                    y: datasets[1].data[indices.lowestOffPeakIndex],
+                    color: 'rgba(54, 162, 235, 0.8)'
+                }
+            };            
+        
+            // Define all annotations including the ceiling
+            let annotations = {
+                highestPeakAnnotation: {
+                    type: 'point',
+                    xValue: points.highPeak.x,
+                    yValue: points.highPeak.y,
+                    backgroundColor: points.highPeak.color,
+                    radius: 10,
+                    borderWidth: 2,
+                    borderColor: 'white',
+                    label: {
+                        display: true,
+                        content: 'Highest Peak',
+                        position: 'top'
+                    }
+                },
+                lowestPeakAnnotation: {
+                    type: 'point',
+                    xValue: points.lowPeak.x,
+                    yValue: points.lowPeak.y,
+                    backgroundColor: points.lowPeak.color,
+                    radius: 10,
+                    borderWidth: 2,
+                    borderColor: 'white',
+                    label: {
+                        display: true,
+                        content: 'Lowest Peak',
+                        position: 'bottom'
+                    }
+                },
+                highestOffPeakAnnotation: {
+                    type: 'point',
+                    xValue: points.highOffPeak.x,
+                    yValue: points.highOffPeak.y,
+                    backgroundColor: points.highOffPeak.color,
+                    radius: 10,
+                    borderWidth: 2,
+                    borderColor: 'white',
+                    label: {
+                        display: true,
+                        content: 'Highest Off-Peak',
+                        position: 'top'
+                    }
+                },
+                lowestOffPeakAnnotation: {
+                    type: 'point',
+                    xValue: points.lowOffPeak.x,
+                    yValue: points.lowOffPeak.y,
+                    backgroundColor: points.lowOffPeak.color,
+                    radius: 10,
+                    borderWidth: 2,
+                    borderColor: 'white',
+                    label: {
+                        display: true,
+                        content: 'Lowest Off-Peak',
+                        position: 'bottom'
+                    }
+                },
+                ceiling: {
+                    type: 'line',
+                    yMin: calculateAdjustedCeiling(),
+                    yMax: calculateAdjustedCeiling(),
+                    borderColor: 'rgba(255, 0, 0, 0.8)',
+                    borderWidth: 3,
+                    borderDash: [10, 5],
+                    yScaleID: 'consumption', // Changed from scaleID to yScaleID
+                    label: {
+                        display: true,
+                        content: `Ceiling: ${formatEUNumber(calculateAdjustedCeiling())} kW`,
+                        position: 'start',
+                        backgroundColor: 'rgba(255, 0, 0, 0.8)',
+                        color: 'white',
+                        padding: 6
+                    }
+                }
+            };           
+
+            if (chartClassification==='usageChart') {
+                 datasets = datasets.filter(
+                     (item) => item.label==='Peak Hours Consumption (kW)'
+                     || item.label === 'Off-Peak Hours Consumption (kW)'
+                     ||  item.label === 'Total Consumption (kW)'
+                 )
+            } else if (chartClassification==='pricingChart') {
+                datasets = datasets.filter(
+                    (item) => item.label==='Peak Hours Cost (€)'
+                    || item.label === 'Off-Peak Hours Cost (€)'
+                )
+                annotations = {}
+            } else if(chartClassification==='ceiling') {
+                // datasets = datasets.filter((item) => item.label==='Total Consumption (kW)')
+                datasets = []
+                annotations = { ceiling: annotations.ceiling};
+            }
+            
+            return {
+                type: chartType === 'mixed' ? 'bar' : chartType,
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        consumption: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Energy Consumption (kW)'
+                            }
+                        },
+                        cost: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Cost (€)'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        }
+                    },
+                    plugins: {
+                        annotation: {
+                            annotations: annotations  // Use the annotations object defined above
+                        },
+                        title: {
+                            display: true,
+                            text: 'Daily Energy Consumption and Costs'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += formatEUNumber(context.parsed.y);
+                                    return label;
+                                },
+                                afterLabel: function(context) {
+                                    const priceHigh = parseFloat(document.getElementById('price_high').value);
+                                    const priceLow = parseFloat(document.getElementById('price_low').value);
+                                    
+                                    if (context.raw === points.highPeak.y && context.label === points.highPeak.x) {
+                                        return `- Peak Hours(Highest Daily)\n  Usage: ${formatEUNumber(points.highPeak.y)} kW / Cost: €${formatEUNumber(points.highPeak.y * priceHigh)}`;
+                                    }
+                                    if (context.raw === points.lowPeak.y && context.label === points.lowPeak.x) {
+                                        return `- Peak Hours(Highest Daily)\n  Usage: ${formatEUNumber(points.lowPeak.y)} kW / Cost: €${formatEUNumber(points.lowPeak.y * priceHigh)}`;
+                                    }
+                                    if (context.raw === points.highOffPeak.y && context.label === points.highOffPeak.x) {
+                                        return `- Off Peak(Highest Daily)\n  Usage: ${formatEUNumber(points.highOffPeak.y)} kW / Cost: €${formatEUNumber(points.highOffPeak.y * priceLow)}`;
+                                    }
+                                    if (context.raw === points.lowOffPeak.y && context.label === points.lowOffPeak.x) {
+                                        return `- Off Peak(Highest Daily)\n  Usage: ${formatEUNumber(points.lowOffPeak.y)} kW / Cost: €${formatEUNumber(points.lowOffPeak.y * priceLow)}`;
+                                    }
+                                    return '';
+                                }
+                                
+                            }
+                        }
+                    }
+                }
+            };
+        }
+
+
+
+//tauhid use usagechart unstead of 'all' parameter below line only
+        function createChartConfig(chartType, labels, datasets, indices, chartClassification='usageChart') {                        
+            // Calculate the positions for all annotations 
             const points = {
                 highPeak: {
                     x: labels[indices.highestPeakIndex],
@@ -1980,14 +2416,19 @@
             const datasets = createDatasets(data.chart_data, chartType);
             const indices = calculateIndices(data.chart_data.datasets.consumption);
             const config = createChartConfig(chartType, data.chart_data.labels, datasets, indices);
+            //tauhid below line
+            const config_p = createChartConfig_p(chartType, data.chart_data.labels, datasets, indices);
+            //tauhid below line
+            const config_c = createChartConfig_c(chartType, data.chart_data.labels, datasets, indices);
+
             
             energyChart = new Chart(ctx, config);
             chartData = data; // Store the data globally
-            
-            energyChart_p = new Chart(ctx_p, config);
+            //tauhid below line
+           energyChart_p = new Chart(ctx_p, config_p);
             chartData = data;
-
-            energyChart_c = new Chart(ctx_c, config);
+//tauhid below line
+            energyChart_c = new Chart(ctx_c, config_c);
             chartData = data;
             // Initialize summary statistics
             updateSummaryStatistics(data.chart_data);
